@@ -59,12 +59,8 @@ def run_evaluation(video_path, rate_fast=5):
     print(f"MOTP (Точность рамок):    {motp:.4f}")
     print("="*30 + "\n")
 
-
-# --- ГЛАВНЫЙ БЛОК УПРАВЛЕНИЯ ---
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Трекер объектов (SSD + Correlation)")
-    
-    # Изменили default на 'all' и добавили 'all' в choices
     parser.add_argument('--mode', type=str, default='all', choices=['demo', 'eval', 'all'],
                         help="Режим: 'demo' (видео), 'eval' (метрики) или 'all' (оба сразу)")
     
@@ -75,22 +71,15 @@ if __name__ == "__main__":
                         help="Как часто запускать SSD (раз в N кадров)")
 
     args = parser.parse_args()
-    
-    # Формируем имя выходного файла
     dir_name = os.path.dirname(args.video)
-    if not dir_name: dir_name = "." # Защита, если путь без папки
+    if not dir_name: dir_name = "."
     base_name = os.path.basename(args.video)
     name_no_ext = os.path.splitext(base_name)[0]
     output_path = os.path.join(dir_name, f"{name_no_ext}_result.mp4")
-
-    # Логика запуска
     if args.mode == 'all':
-        # Запускаем последовательно
         run_demo(args.video, output_path, args.rate)
         run_evaluation(args.video, args.rate)
-        
     elif args.mode == 'demo':
         run_demo(args.video, output_path, args.rate)
-        
     elif args.mode == 'eval':
         run_evaluation(args.video, args.rate)

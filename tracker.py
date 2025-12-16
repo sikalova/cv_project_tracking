@@ -82,7 +82,7 @@ class Tracker:
 
 def main():
     dirname = os.path.dirname(__file__)
-    input_path = os.path.join(dirname, "data", "jogging.mp4")
+    input_path = os.path.join(dirname, "data", "test.mp4")
     output_path = os.path.join(dirname, "data", "test_result.mp4")
     input_clip = VideoFileClip(input_path)
     tracker = Tracker()

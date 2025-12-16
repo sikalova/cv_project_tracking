@@ -1,10 +1,11 @@
 import os
 import numpy as np
 import torch
-import torchvision.transforms as T
 from PIL import Image
-from skimage import io
-from config import model, COCO_INSTANCE_CATEGORY_NAMES
+
+model = torch.hub.load('ultralytics/yolov5', 'yolov5s', pretrained=True, verbose=False)
+model.conf = 0.5
+model.iou = 0.45
 
 COLOR_MAP = {}
 
@@ -29,30 +30,25 @@ def rectangle(shape, ll, rr, line_width=5):
             result.append((rr[0] - c, j))
     return tuple(zip(*result))
 
-@torch.no_grad()
-def extract_detections(frame, min_confidence=0.6, labels=None):
-    transform = T.Compose([T.ToTensor()])
-    input_tensor = transform(frame)
-    input_tensor = input_tensor.unsqueeze(0)
-    results = model(input_tensor)[0]
-    pred_boxes = results['boxes'].cpu().numpy()
-    pred_scores = results['scores'].cpu().numpy()
-    pred_labels = results['labels'].cpu().numpy()
+def extract_detections(frame, min_confidence=0.5, labels=None):
+    results = model(frame)
+    detections = results.xyxy[0].cpu().numpy()
     final_detections = []
-    for i in range(len(pred_scores)):
-        score = pred_scores[i]
-        label_id = int(pred_labels[i])
-        if label_id < len(COCO_INSTANCE_CATEGORY_NAMES):
-            label_name = COCO_INSTANCE_CATEGORY_NAMES[label_id]
-        else:
+
+    for det in detections:
+        x1, y1, x2, y2, conf, cls_id = det
+        cls_id = int(cls_id)
+        label_name = model.names[cls_id]
+
+        if conf < min_confidence:
             continue
-        if score < min_confidence:
-            continue
+
         if labels is not None:
-            if label_name.lower() not in [l.lower() for l in labels]:
+             if label_name.lower() not in [l.lower() for l in labels]:
                 continue
-        xmin, ymin, xmax, ymax = pred_boxes[i]
-        final_detections.append([label_id, xmin, ymin, xmax, ymax])
+
+        final_detections.append([cls_id, x1, y1, x2, y2])
+
     return detection_cast(final_detections)
 
 def draw_detections(frame, detections):
@@ -71,12 +67,14 @@ def draw_detections(frame, detections):
 def main():
     dirname = os.path.dirname(__file__)
     img_path = os.path.join(dirname, "data", "test2.png")
-    frame = Image.open(img_path).convert("RGB")
-    frame = np.array(frame)
-    detections = extract_detections(frame, labels=['person', 'car', 'cat'])
-    frame = draw_detections(frame, detections)
-    io.imshow(frame)
-    io.show()
+    
+    if os.path.exists(img_path):
+        frame = Image.open(img_path).convert("RGB")
+        frame = np.array(frame)
+        detections = extract_detections(frame, min_confidence=0.5, labels=['person', 'car', 'bicycle', 'bus', 'dog'])
+        result_frame = draw_detections(frame, detections)
+        output_path = os.path.join(dirname, "data", "result_detection.jpg")
+        Image.fromarray(result_frame).save(output_path)
 
 if __name__ == "__main__":
     main()

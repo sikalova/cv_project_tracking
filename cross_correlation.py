@@ -75,7 +75,7 @@ class CorrelationTracker(Tracker):
 
 def main():
     dirname = os.path.dirname(os.path.abspath(__file__))
-    video_path = os.path.join(dirname, "data", "jogging.mp4")
+    video_path = os.path.join(dirname, "data", "test.mp4")
     input_clip = VideoFileClip(video_path)
     tracker = CorrelationTracker(detection_rate=5, return_images=True)
     processed_clip = input_clip.fl_image(tracker.update_frame)

@@ -89,7 +89,7 @@ def motp_mota(obj, hyp, threshold=0.5):
         for obj_new, hyp_new in matched_new.items():
             if obj_new in matches and matches[obj_new] != hyp_new:
                 mismatch_error += 1
-matches = matched_new if len(matched_new) > 0 else matches
+        matches = matched_new if len(matched_new) > 0 else matches
         missed_count += len_frame_obj - len(matched_new)
         false_positive += len_frame_hyp - len(matched_new)
         pass
